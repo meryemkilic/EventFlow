@@ -2,6 +2,7 @@ package com.eventflow.backend.dto;
 
 import com.eventflow.backend.entity.InteractionState;
 import com.eventflow.backend.entity.InteractionType;
+
 import lombok.Data;
 
 @Data

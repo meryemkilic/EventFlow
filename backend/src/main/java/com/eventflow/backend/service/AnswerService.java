@@ -4,6 +4,7 @@ import com.eventflow.backend.dto.CreateAnswerRequest;
 import com.eventflow.backend.entity.Answer;
 import com.eventflow.backend.entity.Interaction;
 import com.eventflow.backend.entity.ParticipantSession;
+import com.eventflow.backend.exception.ResourceNotFoundException;
 import com.eventflow.backend.repository.AnswerRepository;
 import com.eventflow.backend.repository.InteractionRepository;
 import com.eventflow.backend.repository.ParticipantSessionRepository;
@@ -22,10 +23,10 @@ public class AnswerService {
 
     public void createAnswer(Long interactionId, CreateAnswerRequest request) {
         Interaction interaction = interactionRepository.findById(interactionId)
-                .orElseThrow(() -> new RuntimeException("Interaction not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Interaction not found with id: " + interactionId));
 
         ParticipantSession participantSession = participantSessionRepository.findById(request.getParticipantSessionId())
-                .orElseThrow(() -> new RuntimeException("ParticipantSession not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("ParticipantSession not found with id: " + request.getParticipantSessionId()));
 
         Answer answer = Answer.builder()
                 .interaction(interaction)

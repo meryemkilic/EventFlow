@@ -1,0 +1,1123 @@
+Project Snapshot - EventFlow (Backend)
+======================================
+
+Bu dosya, backend projesindeki tüm önemli dosyaların dizin yapısını ve içeriklerini içerir.
+
+1) Dizin Yapısı
+---------------
+backend/
+  pom.xml
+  src/main/java/com/eventflow/backend/
+    EventflowBackendApplication.java
+    config/
+      SecurityConfig.java
+    controller/
+      AnswerController.java
+      EventController.java
+      HealthController.java
+      InteractionController.java
+      ParticipantController.java
+    dto/
+      CreateAnswerRequest.java
+      CreateEventRequest.java
+      CreateInteractionRequest.java
+      EventDto.java
+      InteractionDto.java
+      JoinRequest.java
+      JoinResponse.java
+    entity/
+      Answer.java
+      Event.java
+      EventState.java
+      Interaction.java
+      InteractionState.java
+      InteractionType.java
+      ParticipantSession.java
+      Role.java
+      User.java
+    repository/
+      AnswerRepository.java
+      EventRepository.java
+      InteractionRepository.java
+      ParticipantSessionRepository.java
+      UserRepository.java
+    service/
+      AnswerService.java
+      EventService.java
+      InteractionService.java
+      ParticipantService.java
+  src/main/resources/
+    application.properties
+
+2) pom.xml
+----------
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.0</version>
+        <relativePath/>
+    </parent>
+    
+    <groupId>com.eventflow</groupId>
+    <artifactId>eventflow-backend</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>eventflow-backend</name>
+    <description>EventFlow Backend Application</description>
+    
+    <properties>
+        <java.version>20</java.version>
+    </properties>
+    
+    <dependencies>
+        <!-- Spring Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        
+        <!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
+        <!-- MySQL Driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        
+        <!-- Spring Boot DevTools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Spring Boot Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+3) application.properties
+-------------------------
+# =============================
+# Application Info
+# =============================
+spring.application.name=eventflow-backend
+server.port=8080
+
+# =============================
+# Database Configuration (MySQL)
+# =============================
+spring.datasource.url=jdbc:mysql://localhost:3306/eventflow?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+spring.datasource.username=root
+spring.datasource.password=Melv18309
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# =============================
+# Hibernate / JPA Settings
+# =============================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+# =============================
+# Thymeleaf Settings
+# =============================
+spring.thymeleaf.cache=false
+
+4) Java Kodları
+---------------
+
+4.1) EventflowBackendApplication.java
+-------------------------------------
+package com.eventflow.backend;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class EventflowBackendApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(EventflowBackendApplication.class, args);
+    }
+
+}
+
+4.2) config/SecurityConfig.java
+-------------------------------
+package com.eventflow.backend.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                // CSRF dev için kapalı
+                .csrf(csrf -> csrf.disable())
+                // Tüm istekleri şimdilik serbest bırakıyoruz
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                );
+
+        // Login form, basic auth vs. yok
+        return http.build();
+    }
+}
+
+4.3) controller/HealthController.java
+-------------------------------------
+package com.eventflow.backend.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HealthController {
+
+    @GetMapping("/api/health")
+    public String healthCheck() {
+        return "EventFlow backend is running";
+    }
+
+}
+
+4.4) controller/EventController.java
+------------------------------------
+package com.eventflow.backend.controller;
+
+import com.eventflow.backend.dto.CreateEventRequest;
+import com.eventflow.backend.dto.EventDto;
+import com.eventflow.backend.service.EventService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/events")
+public class EventController {
+
+    private final EventService eventService;
+
+    public EventController(EventService eventService) {
+        this.eventService = eventService;
+    }
+
+    @GetMapping
+    public List<EventDto> getAllEvents() {
+        return eventService.getAllEvents();
+    }
+
+    @GetMapping("/{id}")
+    public EventDto getEventById(@PathVariable Long id) {
+        return eventService.getEventById(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<EventDto> createEvent(@RequestBody CreateEventRequest request) {
+        EventDto dto = eventService.createEvent(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+
+    @PutMapping("/{id}")
+    public EventDto updateEvent(@PathVariable Long id,
+                                @RequestBody CreateEventRequest request) {
+        return eventService.updateEvent(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEvent(@PathVariable Long id) {
+        eventService.deleteEvent(id);
+    }
+
+}
+
+4.5) controller/InteractionController.java
+------------------------------------------
+package com.eventflow.backend.controller;
+
+import com.eventflow.backend.dto.CreateInteractionRequest;
+import com.eventflow.backend.dto.InteractionDto;
+import com.eventflow.backend.service.InteractionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class InteractionController {
+
+    private final InteractionService interactionService;
+
+    // Belirli bir event'e ait tüm interaction'lar
+    @GetMapping("/events/{eventId}/interactions")
+    public List<InteractionDto> getInteractions(@PathVariable Long eventId) {
+        return interactionService.getInteractionsForEvent(eventId);
+    }
+
+    // Belirli bir event'e yeni interaction ekle
+    @PostMapping("/events/{eventId}/interactions")
+    public ResponseEntity<InteractionDto> createInteraction(@PathVariable Long eventId,
+                                                            @RequestBody CreateInteractionRequest request) {
+        InteractionDto dto = interactionService.createInteraction(eventId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+
+    // Interaction güncelle
+    @PutMapping("/interactions/{id}")
+    public InteractionDto updateInteraction(@PathVariable Long id,
+                                            @RequestBody CreateInteractionRequest request) {
+        return interactionService.updateInteraction(id, request);
+    }
+
+    // Interaction sil
+    @DeleteMapping("/interactions/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteInteraction(@PathVariable Long id) {
+        interactionService.deleteInteraction(id);
+    }
+
+}
+
+4.6) controller/AnswerController.java
+-------------------------------------
+package com.eventflow.backend.controller;
+
+import com.eventflow.backend.dto.CreateAnswerRequest;
+import com.eventflow.backend.service.AnswerService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/interactions")
+@RequiredArgsConstructor
+public class AnswerController {
+
+    private final AnswerService answerService;
+
+    @PostMapping("/{interactionId}/answers")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createAnswer(@PathVariable Long interactionId,
+                             @RequestBody CreateAnswerRequest request) {
+        answerService.createAnswer(interactionId, request);
+    }
+
+}
+
+4.7) controller/ParticipantController.java
+------------------------------------------
+package com.eventflow.backend.controller;
+
+import com.eventflow.backend.dto.JoinRequest;
+import com.eventflow.backend.dto.JoinResponse;
+import com.eventflow.backend.service.ParticipantService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class ParticipantController {
+
+    private final ParticipantService participantService;
+
+    @PostMapping("/join")
+    public ResponseEntity<JoinResponse> joinEvent(@RequestBody JoinRequest request) {
+        JoinResponse response = participantService.joinEvent(request);
+        return ResponseEntity.ok(response);
+    }
+}
+
+4.8) dto/CreateEventRequest.java
+--------------------------------
+package com.eventflow.backend.dto;
+
+import com.eventflow.backend.entity.EventState;
+import lombok.Data;
+
+@Data
+public class CreateEventRequest {
+
+    private Long hostId;        // şimdilik host'u id ile vereceğiz
+    private String title;
+    private String description;
+    private String code;
+    private EventState state;
+
+}
+
+4.9) dto/EventDto.java
+----------------------
+package com.eventflow.backend.dto;
+
+import com.eventflow.backend.entity.EventState;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class EventDto {
+
+    private Long id;
+    private Long hostId;
+    private String title;
+    private String description;
+    private String code;
+    private EventState state;
+
+}
+
+4.10) dto/CreateInteractionRequest.java
+---------------------------------------
+package com.eventflow.backend.dto;
+
+import com.eventflow.backend.entity.InteractionState;
+import com.eventflow.backend.entity.InteractionType;
+import lombok.Data;
+
+@Data
+public class CreateInteractionRequest {
+    private InteractionType type;
+    private InteractionState state;
+    private String contentJson;
+    private String behaviorJson;
+    private String gamificationJson;
+    private Integer orderIndex;
+}
+
+4.11) dto/InteractionDto.java
+-----------------------------
+package com.eventflow.backend.dto;
+
+import com.eventflow.backend.entity.InteractionState;
+import com.eventflow.backend.entity.InteractionType;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class InteractionDto {
+    private Long id;
+    private Long eventId;
+    private InteractionType type;
+    private InteractionState state;
+    private String contentJson;
+    private String behaviorJson;
+    private String gamificationJson;
+    private Integer orderIndex;
+}
+
+4.12) dto/CreateAnswerRequest.java
+----------------------------------
+package com.eventflow.backend.dto;
+
+import lombok.Data;
+
+@Data
+public class CreateAnswerRequest {
+    private Long participantSessionId;
+    private String answerJson;
+}
+
+4.13) dto/JoinRequest.java
+--------------------------
+package com.eventflow.backend.dto;
+
+import lombok.Data;
+
+@Data
+public class JoinRequest {
+    private String code;
+    private String nickname;
+}
+
+4.14) dto/JoinResponse.java
+---------------------------
+package com.eventflow.backend.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class JoinResponse {
+    private Long sessionId;
+    private Long eventId;
+    private String eventTitle;
+}
+
+4.15) entity/User.java
+----------------------
+package com.eventflow.backend.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password; // Faz 4'te encode edeceğiz
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role; // HOST / PARTICIPANT
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+}
+
+4.16) entity/Event.java
+-----------------------
+package com.eventflow.backend.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "events")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Event {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Bu event'in sahibi (host)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "host_id")
+    private User host;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(length = 1000)
+    private String description;
+
+    // Katılımcıların join olmak için kullanacağı kod (ör: ABC123)
+    @Column(nullable = false, unique = true)
+    private String code;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EventState state;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Interaction> interactions; // Interaction'ları sonra ekleyeceğiz
+
+}
+
+4.17) entity/Interaction.java
+-----------------------------
+package com.eventflow.backend.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "interactions")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Interaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Bu interaction hangi evente ait?
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "event_id")
+    private Event event;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InteractionType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private InteractionState state;
+
+    // Soru metni, seçenekler, vs. JSON olarak tutulacak
+    @Column(columnDefinition = "TEXT")
+    private String contentJson;
+
+    // Timer, anonimlik, sonuç görünürlüğü, vs.
+    @Column(columnDefinition = "TEXT")
+    private String behaviorJson;
+
+    // XP, puanlama, takım etkisi, vs.
+    @Column(columnDefinition = "TEXT")
+    private String gamificationJson;
+
+    // Timeline sırası
+    @Column(nullable = false)
+    private Integer orderIndex;
+
+}
+
+4.18) entity/ParticipantSession.java
+------------------------------------
+package com.eventflow.backend.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "participant_sessions")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ParticipantSession {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Hangi event'e katılmış?
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "event_id")
+    private Event event;
+
+    @Column(nullable = false)
+    private String nickname;
+
+    @Column(nullable = false)
+    private Boolean guest; // true = guest, false = registered
+
+    @Column(nullable = false)
+    private Integer xp;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+}
+
+4.19) entity/Answer.java
+------------------------
+package com.eventflow.backend.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "answers")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Answer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Hangi interaction'a cevap verilmiş?
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "interaction_id")
+    private Interaction interaction;
+
+    // Hangi participant session bu cevabı verdi?
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "participant_session_id")
+    private ParticipantSession participantSession;
+
+    // Cevabın kendisi (JSON)
+    @Column(columnDefinition = "TEXT")
+    private String answerJson;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+}
+
+4.20) entity/EventState.java
+----------------------------
+package com.eventflow.backend.entity;
+
+public enum EventState {
+    DRAFT,
+    READY,
+    LIVE,
+    ENDED
+}
+
+4.21) entity/InteractionType.java
+---------------------------------
+package com.eventflow.backend.entity;
+
+public enum InteractionType {
+    POLL,
+    QUIZ,
+    WORD_CLOUD,
+    OPEN_TEXT,
+    RANKING,
+    SCALE_LIKERT,
+    QNA,
+    MOOD_CHECK,
+    PACE_CHECK,
+    SURVEY
+}
+
+4.22) entity/InteractionState.java
+----------------------------------
+package com.eventflow.backend.entity;
+
+public enum InteractionState {
+    DRAFT,
+    READY,
+    LIVE,
+    LOCKED
+}
+
+4.23) entity/Role.java
+----------------------
+package com.eventflow.backend.entity;
+
+public enum Role {
+    HOST,
+    PARTICIPANT
+}
+
+4.24) repository/EventRepository.java
+-------------------------------------
+package com.eventflow.backend.repository;
+
+import com.eventflow.backend.entity.Event;
+import com.eventflow.backend.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.Optional;
+
+public interface EventRepository extends JpaRepository<Event, Long> {
+
+    List<Event> findByHost(User host);
+
+    Optional<Event> findByCode(String code);
+
+}
+
+4.25) repository/InteractionRepository.java
+-------------------------------------------
+package com.eventflow.backend.repository;
+
+import com.eventflow.backend.entity.Event;
+import com.eventflow.backend.entity.Interaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface InteractionRepository extends JpaRepository<Interaction, Long> {
+    // Bir event'e ait tüm interaction'ları timeline sırasına göre getir
+    List<Interaction> findByEventOrderByOrderIndexAsc(Event event);
+}
+
+4.26) repository/ParticipantSessionRepository.java
+--------------------------------------------------
+package com.eventflow.backend.repository;
+
+import com.eventflow.backend.entity.Event;
+import com.eventflow.backend.entity.ParticipantSession;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface ParticipantSessionRepository extends JpaRepository<ParticipantSession, Long> {
+    List<ParticipantSession> findByEvent(Event event);
+}
+
+4.27) repository/AnswerRepository.java
+--------------------------------------
+package com.eventflow.backend.repository;
+
+import com.eventflow.backend.entity.Answer;
+import com.eventflow.backend.entity.Interaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface AnswerRepository extends JpaRepository<Answer, Long> {
+    List<Answer> findByInteraction(Interaction interaction);
+}
+
+4.28) repository/UserRepository.java
+------------------------------------
+package com.eventflow.backend.repository;
+
+import com.eventflow.backend.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+}
+
+4.29) service/EventService.java
+-------------------------------
+package com.eventflow.backend.service;
+
+import com.eventflow.backend.dto.CreateEventRequest;
+import com.eventflow.backend.dto.EventDto;
+import com.eventflow.backend.entity.Event;
+import com.eventflow.backend.entity.User;
+import com.eventflow.backend.repository.EventRepository;
+import com.eventflow.backend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class EventService {
+
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+
+    public List<EventDto> getAllEvents() {
+        return eventRepository.findAll().stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public EventDto getEventById(Long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        return toDto(event);
+    }
+
+    public EventDto createEvent(CreateEventRequest request) {
+        User host = userRepository.findById(request.getHostId())
+                .orElseThrow(() -> new RuntimeException("Host not found"));
+
+        Event event = Event.builder()
+                .host(host)
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .code(request.getCode())
+                .state(request.getState())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Event saved = eventRepository.save(event);
+        return toDto(saved);
+    }
+
+    public EventDto updateEvent(Long id, CreateEventRequest request) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        event.setTitle(request.getTitle());
+        event.setDescription(request.getDescription());
+        event.setCode(request.getCode());
+        event.setState(request.getState());
+        event.setUpdatedAt(LocalDateTime.now());
+
+        Event saved = eventRepository.save(event);
+        return toDto(saved);
+    }
+
+    public void deleteEvent(Long id) {
+        eventRepository.deleteById(id);
+    }
+
+    private EventDto toDto(Event event) {
+        return EventDto.builder()
+                .id(event.getId())
+                .hostId(event.getHost().getId())
+                .title(event.getTitle())
+                .description(event.getDescription())
+                .code(event.getCode())
+                .state(event.getState())
+                .build();
+    }
+
+}
+
+4.30) service/InteractionService.java
+-------------------------------------
+package com.eventflow.backend.service;
+
+import com.eventflow.backend.dto.CreateInteractionRequest;
+import com.eventflow.backend.dto.InteractionDto;
+import com.eventflow.backend.entity.Event;
+import com.eventflow.backend.entity.Interaction;
+import com.eventflow.backend.repository.EventRepository;
+import com.eventflow.backend.repository.InteractionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class InteractionService {
+
+    private final InteractionRepository interactionRepository;
+    private final EventRepository eventRepository;
+
+    public List<InteractionDto> getInteractionsForEvent(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        return interactionRepository.findByEventOrderByOrderIndexAsc(event)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public InteractionDto createInteraction(Long eventId, CreateInteractionRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        Interaction interaction = Interaction.builder()
+                .event(event)
+                .type(request.getType())
+                .state(request.getState())
+                .contentJson(request.getContentJson())
+                .behaviorJson(request.getBehaviorJson())
+                .gamificationJson(request.getGamificationJson())
+                .orderIndex(request.getOrderIndex())
+                .build();
+
+        Interaction saved = interactionRepository.save(interaction);
+        return toDto(saved);
+    }
+
+    public InteractionDto updateInteraction(Long id, CreateInteractionRequest request) {
+        Interaction interaction = interactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Interaction not found"));
+
+        interaction.setType(request.getType());
+        interaction.setState(request.getState());
+        interaction.setContentJson(request.getContentJson());
+        interaction.setBehaviorJson(request.getBehaviorJson());
+        interaction.setGamificationJson(request.getGamificationJson());
+        interaction.setOrderIndex(request.getOrderIndex());
+
+        Interaction saved = interactionRepository.save(interaction);
+        return toDto(saved);
+    }
+
+    public void deleteInteraction(Long id) {
+        interactionRepository.deleteById(id);
+    }
+
+    private InteractionDto toDto(Interaction interaction) {
+        return InteractionDto.builder()
+                .id(interaction.getId())
+                .eventId(interaction.getEvent().getId())
+                .type(interaction.getType())
+                .state(interaction.getState())
+                .contentJson(interaction.getContentJson())
+                .behaviorJson(interaction.getBehaviorJson())
+                .gamificationJson(interaction.getGamificationJson())
+                .orderIndex(interaction.getOrderIndex())
+                .build();
+    }
+
+}
+
+4.31) service/AnswerService.java
+--------------------------------
+package com.eventflow.backend.service;
+
+import com.eventflow.backend.dto.CreateAnswerRequest;
+import com.eventflow.backend.entity.Answer;
+import com.eventflow.backend.entity.Interaction;
+import com.eventflow.backend.entity.ParticipantSession;
+import com.eventflow.backend.repository.AnswerRepository;
+import com.eventflow.backend.repository.InteractionRepository;
+import com.eventflow.backend.repository.ParticipantSessionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class AnswerService {
+
+    private final AnswerRepository answerRepository;
+    private final InteractionRepository interactionRepository;
+    private final ParticipantSessionRepository participantSessionRepository;
+
+    public void createAnswer(Long interactionId, CreateAnswerRequest request) {
+        Interaction interaction = interactionRepository.findById(interactionId)
+                .orElseThrow(() -> new RuntimeException("Interaction not found"));
+
+        ParticipantSession participantSession = participantSessionRepository.findById(request.getParticipantSessionId())
+                .orElseThrow(() -> new RuntimeException("ParticipantSession not found"));
+
+        Answer answer = Answer.builder()
+                .interaction(interaction)
+                .participantSession(participantSession)
+                .answerJson(request.getAnswerJson())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        answerRepository.save(answer);
+    }
+
+}
+
+4.32) service/ParticipantService.java
+-------------------------------------
+package com.eventflow.backend.service;
+
+import com.eventflow.backend.dto.JoinRequest;
+import com.eventflow.backend.dto.JoinResponse;
+import com.eventflow.backend.entity.Event;
+import com.eventflow.backend.entity.ParticipantSession;
+import com.eventflow.backend.repository.EventRepository;
+import com.eventflow.backend.repository.ParticipantSessionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class ParticipantService {
+
+    private final EventRepository eventRepository;
+    private final ParticipantSessionRepository participantSessionRepository;
+
+    public JoinResponse joinEvent(JoinRequest request) {
+        // Event'i kod ile bul
+        Event event = eventRepository.findByCode(request.getCode())
+                .orElseThrow(() -> new RuntimeException("Event not found with code: " + request.getCode()));
+
+        // Yeni session oluştur
+        ParticipantSession session = ParticipantSession.builder()
+                .event(event)
+                .nickname(request.getNickname())
+                .guest(true) // Şimdilik herkes guest
+                .xp(0)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        ParticipantSession savedSession = participantSessionRepository.save(session);
+
+        return JoinResponse.builder()
+                .sessionId(savedSession.getId())
+                .eventId(event.getId())
+                .eventTitle(event.getTitle())
+                .build();
+    }
+}
+
+4.33) config/SecurityConfig.java
+--------------------------------
+(Yukarıda 4.2'de listelendi)
+
+*** End Patch
+
+
+

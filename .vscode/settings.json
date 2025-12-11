@@ -1,0 +1,12 @@
+{
+    "java.configuration.annotationProcessing.enabled": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.enableAnnotationProcessing": true,
+    "java.jdt.ls.lombokSupport.enabled": true,
+    "java.configuration.maven.userSettings": null,
+    "java.import.maven.enabled": true,
+    "java.maven.downloadSources": true,
+    "java.maven.downloadJavadoc": true
+}
+

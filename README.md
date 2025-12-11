@@ -59,3 +59,6 @@ Frontend `http://localhost:5173` adresinde çalışacaktır.
 - ✅ Minimum dosya iskeletleri hazırlandı
 
 
+
+
+

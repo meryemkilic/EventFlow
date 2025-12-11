@@ -1,16 +1,27 @@
 package com.eventflow.backend.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Entity
-@Table(name = "users")
-@Getter
-@Setter
+@Table(name = "users") // MySQL'de 'user' rezerve kelime olduğu için 'users' yaptık.
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuppressWarnings("unused")
 public class User {
 
     @Id
@@ -24,7 +35,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password; // Faz 4'te encode edeceğiz
+    private String password; // BCrypt ile şifrelenmiş tutulacak
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -32,7 +43,4 @@ public class User {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
 }
-
-
